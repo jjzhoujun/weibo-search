@@ -17,6 +17,9 @@ class SearchSpider(scrapy.Spider):
     allowed_domains = ['weibo.com']
     settings = get_project_settings()
     keyword_list = settings.get('KEYWORD_LIST')
+    max_count = settings.get('MAX_COUNT')
+    cur_count = 0
+    print(keyword_list, 'max_count = ', max_count)
     if not isinstance(keyword_list, list):
         if not os.path.isabs(keyword_list):
             keyword_list = os.getcwd() + os.sep + keyword_list
@@ -355,10 +358,10 @@ class SearchSpider(scrapy.Spider):
                 weibo['id'] = sel.xpath('@mid').extract_first()
                 weibo['bid'] = sel.xpath(
                     './/p[@class="from"]/a[1]/@href').extract_first(
-                    ).split('/')[-1].split('?')[0]
+                ).split('/')[-1].split('?')[0]
                 weibo['user_id'] = info[0].xpath(
                     'div[2]/a/@href').extract_first().split('?')[0].split(
-                        '/')[-1]
+                    '/')[-1]
                 weibo['screen_name'] = info[0].xpath(
                     'div[2]/a/@nick-name').extract_first()
                 txt_sel = sel.xpath('.//p[@class="txt"]')[0]
@@ -390,7 +393,7 @@ class SearchSpider(scrapy.Spider):
                         is_long_weibo = True
                 weibo['text'] = txt_sel.xpath(
                     'string(.)').extract_first().replace('\u200b', '').replace(
-                        '\ue627', '')
+                    '\ue627', '')
                 weibo['article_url'] = self.get_article_url(txt_sel)
                 weibo['location'] = self.get_location(txt_sel)
                 if weibo['location']:
@@ -427,7 +430,7 @@ class SearchSpider(scrapy.Spider):
                     0] if attitudes_count else '0'
                 created_at = sel.xpath(
                     './/p[@class="from"]/a[1]/text()').extract_first(
-                    ).replace(' ', '').replace('\n', '').split('前')[0]
+                ).replace(' ', '').replace('\n', '').split('前')[0]
                 weibo['created_at'] = util.standardize_date(created_at)
                 source = sel.xpath('.//p[@class="from"]/a[2]/text()'
                                    ).extract_first()
@@ -464,7 +467,7 @@ class SearchSpider(scrapy.Spider):
                     ).extract_first()[4:]
                     retweet['bid'] = retweet_sel[0].xpath(
                         './/p[@class="from"]/a/@href').extract_first().split(
-                            '/')[-1].split('?')[0]
+                        '/')[-1].split('?')[0]
                     info = retweet_sel[0].xpath(
                         './/div[@node-type="feed_list_forwardContent"]/a[1]'
                     )[0]
@@ -475,7 +478,7 @@ class SearchSpider(scrapy.Spider):
                     retweet['text'] = retweet_txt_sel.xpath(
                         'string(.)').extract_first().replace('\u200b',
                                                              '').replace(
-                                                                 '\ue627', '')
+                        '\ue627', '')
                     retweet['article_url'] = self.get_article_url(
                         retweet_txt_sel)
                     retweet['location'] = self.get_location(retweet_txt_sel)
@@ -507,7 +510,7 @@ class SearchSpider(scrapy.Spider):
                         0] if attitudes_count else '0'
                     created_at = retweet_sel[0].xpath(
                         './/p[@class="from"]/a[1]/text()').extract_first(
-                        ).replace(' ', '').replace('\n', '').split('前')[0]
+                    ).replace(' ', '').replace('\n', '').split('前')[0]
                     retweet['created_at'] = util.standardize_date(created_at)
                     source = retweet_sel[0].xpath(
                         './/p[@class="from"]/a[2]/text()').extract_first()
@@ -518,4 +521,14 @@ class SearchSpider(scrapy.Spider):
                     yield {'weibo': retweet, 'keyword': keyword}
                     weibo['retweet_id'] = retweet['id']
                 print(weibo)
+                # if self.cur_count >= self.max_count:
+                #     print(f'已经下载{self.cur_count}条数据')
+                #     self.cur_count = 0
+                #     raise CloseSpider()
+                # else:
+                #     print(f'已经下载{self.cur_count}条数据，继续下载...')
+                #     self.cur_count += 1
+                # 存在并发统计问题
+                self.crawler.stats.set_value('cust_item_scraped_count', self.cur_count)
+                self.cur_count += 1
                 yield {'weibo': weibo, 'keyword': keyword}

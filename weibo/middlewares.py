@@ -6,6 +6,7 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+from scrapy.exceptions import CloseSpider
 
 
 class WeiboSpiderMiddleware(object):
@@ -101,3 +102,30 @@ class WeiboDownloaderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+class LimitCountMiddleware(object):
+    """限制最大下载条数"""
+    """FixMe 这里有点问题，统计不到对应的已经下载的数据，先硬编码到search.py里"""
+    max_count = 0
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        s = cls()
+        settings = crawler.settings
+        s.max_count = settings.getint('MAX_COUNT')
+        print('===>>>max_count = ', s.max_count)
+        return s
+
+    def process_response(self, request, response, spider):
+        print('==>> self.max_count = ', self.max_count)
+        print('===>>>>download.... = ', spider.crawler.stats.get_value('cust_item_scraped_count'))
+        # if (spider.crawler.stats.get_value(
+        #         'file_status_count/downloaded') is not None and spider.crawler.stats.get_value(
+        #     'file_status_count/downloaded') >= 10):
+        if (spider.crawler.stats.get_value(
+                'cust_item_scraped_count') is not None and spider.crawler.stats.get_value(
+                'cust_item_scraped_count') >= self.max_count):
+            raise CloseSpider(
+                f'More than {self.max_count} items were downloaded from the provider and the spider was suspended to avoid banning')
+        return response

@@ -104,3 +104,10 @@ def str_to_time(text):
     """将字符串转换成时间类型"""
     result = datetime.strptime(text, '%Y-%m-%d')
     return result
+
+
+def get_today():
+    """获取今天的时间"""
+    today = datetime.now().strftime('%Y-%m-%d')
+    print(today)
+    return today
