@@ -1,3 +1,4 @@
+import datetime
 import sys
 from datetime import datetime, timedelta
 
@@ -109,5 +110,11 @@ def str_to_time(text):
 def get_today():
     """获取今天的时间"""
     today = datetime.now().strftime('%Y-%m-%d')
-    print(today)
     return today
+
+
+def get_yesterday():
+    now_time = datetime.now()
+    yes_time = now_time + timedelta(days=-1)
+    yes_time_str = yes_time.strftime('%Y-%m-%d')
+    return yes_time_str

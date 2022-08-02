@@ -15,6 +15,8 @@ from scrapy.pipelines.files import FilesPipeline
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.utils.project import get_project_settings
 
+from weibo.items import WeiboItem
+
 settings = get_project_settings()
 
 
@@ -206,6 +208,10 @@ class DuplicatesPipeline(object):
         self.ids_seen = set()
 
     def process_item(self, item, spider):
+        if isinstance(item, WeiboItem):
+            print('===>>>now is WeiboItem, just save to crawlab')
+            return item
+        
         if item['weibo']['id'] in self.ids_seen:
             raise DropItem("过滤重复微博: %s" % item)
         else:

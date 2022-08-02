@@ -521,14 +521,16 @@ class SearchSpider(scrapy.Spider):
                     yield {'weibo': retweet, 'keyword': keyword}
                     weibo['retweet_id'] = retweet['id']
                 print(weibo)
-                # if self.cur_count >= self.max_count:
-                #     print(f'已经下载{self.cur_count}条数据')
-                #     self.cur_count = 0
-                #     raise CloseSpider()
-                # else:
-                #     print(f'已经下载{self.cur_count}条数据，继续下载...')
-                #     self.cur_count += 1
+                if self.cur_count >= self.max_count:
+                    print(f'已经下载{self.cur_count}条数据')
+                    self.cur_count = 0
+                    raise CloseSpider()
+                else:
+                    print(f'已经下载{self.cur_count}条数据，继续下载...')
+                    self.cur_count += 1
                 # 存在并发统计问题
-                self.crawler.stats.set_value('cust_item_scraped_count', self.cur_count)
-                self.cur_count += 1
-                yield {'weibo': weibo, 'keyword': keyword}
+                # self.crawler.stats.set_value('cust_item_scraped_count', self.cur_count)
+                # self.cur_count += 1
+                # yield {'weibo': weibo, 'keyword': keyword}
+                # FixMe 临时为了写入crawlab的mongodb，直接再yield一个，会被其他管道处理导致出问题？
+                yield weibo
